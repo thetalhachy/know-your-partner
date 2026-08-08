@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17100f">
+<title>Know Your Partner — A little time for the two of you.</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+<div class="noise"></div>
+<header>
+  <button class="link-btn logo" onclick="App.goHome()">know your <span>partner</span></button>
+  <div class="header-right">
+    <div class="room-chip" id="headerRoom"></div>
+    <button class="link-btn hidden" id="headerBack" onclick="App.goBack()">← Back</button>
+  </div>
+</header>
+
+<main>
+<!-- HOME -->
+<section id="home" class="screen hero">
+  <div class="hero-inner">
+    <div class="hero-mark">♡</div>
+    <div class="eyebrow">A relationship discovery game</div>
+    <h1 class="display">You know them.<br><em>Keep knowing them.</em></h1>
+    <p class="sub">A little time for the two of you. Ask better questions, discover unexpected answers, and keep the things you never want to forget.</p>
+    <div class="actions">
+      <button class="btn primary" onclick="App.show('create')">Start together <span>→</span></button>
+      <button class="btn ghost" onclick="App.show('join')">I have a room code</button>
+    </div>
+  </div>
+</section>
+
+<!-- CREATE -->
+<section id="create" class="screen hidden">
+  <div class="panel narrow">
+    <div class="eyebrow">01 · Make your room</div>
+    <h2 class="display title">Just the two of you.</h2>
+    <p class="copy">No profile. No feed. No audience. Pick your names and we'll make a private room for tonight.</p>
+    <div class="form-grid">
+      <div class="field"><label>Your name</label><input id="creatorName" maxlength="24" placeholder="Your name"></div>
+      <div class="field"><label>Partner's name</label><input id="partnerName" maxlength="24" placeholder="Their name"></div>
+    </div>
+    <div class="actions left">
+      <button class="btn primary" onclick="App.createRoom()">Create our room →</button>
+      <button class="link-btn" onclick="App.show('home')">Maybe later</button>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN -->
+<section id="join" class="screen hidden">
+  <div class="panel narrow">
+    <div class="eyebrow">Join your partner</div>
+    <h2 class="display title">You were invited.</h2>
+    <p class="copy">Enter the four-character code your partner sent you. You'll both see the same questions and reveal your answers together.</p>
+    <div class="form-grid" style="margin:28px 0 0">
+      <div class="field">
+        <label>Room code</label>
+        <input id="joinCode" autocomplete="off" placeholder="A7K2" style="font-size:28px;letter-spacing:.2em">
+        <div class="helper">Look for the code on their screen.</div>
+      </div>
+      <div class="field">
+        <label>Your name</label>
+        <input id="joinName" maxlength="20" placeholder="Your name">
+      </div>
+    </div>
+    <div class="actions left">
+      <button class="btn primary" onclick="App.joinRoom()">Join room →</button>
+      <button class="link-btn" onclick="App.show('home')">Go back</button>
+    </div>
+  </div>
+</section>
+
+<!-- INVITE (host waiting for partner) -->
+<section id="invite" class="screen hidden">
+  <div class="panel narrow" style="text-align:center">
+    <div class="eyebrow">Your room is ready</div>
+    <h2 class="display title">Send this to <span id="inviteTo">them</span>.</h2>
+    <p class="copy">They'll tap "I have a room code" and join with this code. The game starts the moment they're in.</p>
+    <div class="room-box invite-box">
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Room code</div><div class="code" id="inviteCode" style="font-size:34px;letter-spacing:.25em">----</div></div>
+      <button class="btn primary" onclick="App.copyCode()">Copy</button>
+    </div>
+    <div class="dots"><i></i><i></i><i></i></div>
+    <p class="copy" style="font-size:14px">Waiting for your partner to join…</p>
+    <button class="btn ghost" onclick="App.goHome()">Leave room</button>
+  </div>
+</section>
+
+<!-- LOBBY -->
+<section id="lobby" class="screen hidden">
+  <div class="lobby-head">
+    <div>
+      <div class="eyebrow">Your room is ready</div>
+      <h2 class="display title">What do you want to discover?</h2>
+      <p class="copy">Pick a feeling. There are no scores here — only better conversations.</p>
+    </div>
+    <div class="room-box">
+      <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Invite code</div><div class="code" id="roomCode">----</div></div>
+      <button class="btn small" onclick="App.copyCode()">Copy</button>
+    </div>
+  </div>
+  <div class="category-grid" id="categories"></div>
+</section>
+
+<!-- QUESTION -->
+<section id="play" class="screen hidden">
+  <div class="question-layout">
+    <div class="progress-wrap">
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="progress-text" id="progressText">1 / 4</div>
+    </div>
+    <div class="question-category eyebrow" id="catPill"></div>
+    <div class="question" id="questionText"></div>
+    <div class="answer">
+      <textarea id="myAnswer" maxlength="600" placeholder="Say what you actually mean…"></textarea>
+      <div class="answer-bottom">
+        <span class="counter" id="counter">0 / 600</span>
+        <button class="btn primary lock" onclick="App.submitAnswer()">I'm ready →</button>
+      </div>
+      <div class="soft-row">
+        <button class="link-btn soft" onclick="App.decline()">I'd rather not answer</button>
+        <span class="soft-sep">·</span>
+        <button class="link-btn soft" onclick="App.dontKnow()">I don't know yet</button>
+      </div>
+    </div>
+    <p class="helper" style="margin-top:18px">Your answer stays hidden until both of you are ready.</p>
+  </div>
+</section>
+
+<!-- WAIT -->
+<section id="wait" class="screen hidden">
+  <div class="wait">
+    <div class="avatar-pair"><div class="avatar a" id="avatarMe">Y</div><div class="avatar b" id="avatarThem">P</div></div>
+    <div class="eyebrow">Your answer is locked</div>
+    <h2 class="display title" id="waitTitle">Now we wait for them.</h2>
+    <p class="copy">No peeking. The good part is seeing what you both said before either of you can change your mind.</p>
+    <div class="dots"><i></i><i></i><i></i></div>
+  </div>
+</section>
+
+<!-- REVEAL -->
+<section id="reveal" class="screen hidden">
+  <div class="reveal">
+    <div class="eyebrow">The reveal</div>
+    <div class="reveal-question" id="revealQuestion"></div>
+    <div class="match" id="matchBadge">♡ Take a second to read theirs.</div>
+    <div class="answers">
+      <article class="answer-card"><div class="who" id="meName"></div><div class="words" id="meAnswer"></div></article>
+      <article class="answer-card"><div class="who" id="themName"></div><div class="words" id="themAnswer"></div></article>
+    </div>
+    <div class="reveal-actions" style="margin-top:20px">
+      <button class="btn primary" onclick="App.saveDiscovery()">♡ Keep this</button>
+      <button class="btn ghost" onclick="App.nextQuestion()">Next question →</button>
+    </div>
+    <button class="link-btn" style="margin-top:16px" onclick="App.show('discoveries')">See our discoveries</button>
+  </div>
+</section>
+
+<!-- DISCOVERIES -->
+<section id="discoveries" class="screen hidden">
+  <div class="discoveries-head">
+    <div class="eyebrow">Your little archive</div>
+    <h2 class="display title">Things I didn't know about you.</h2>
+    <p class="copy">The answers you chose to keep. Small things become important when you remember them.</p>
+  </div>
+  <div class="discovery-list" id="savedList"></div>
+  <div class="actions left" style="margin-top:20px">
+    <button class="btn primary" onclick="App.show('lobby')">Keep discovering →</button>
+    <button class="link-btn" onclick="App.clearDiscoveries()">Clear archive</button>
+  </div>
+</section>
+</main>
+
+<footer class="footer">Know Your Partner · made for two people</footer>
+<div class="toast" id="toast"></div>
+<script src="js/config.js"></script>
+<script src="js/questions.js"></script>
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
