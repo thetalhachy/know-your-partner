@@ -30,14 +30,17 @@ create table if not exists public.rooms (
 -- to their own row after a reload.
 -- ---------------------------------------------------------------
 create table if not exists public.participants (
-  id            uuid primary key,
+  id            uuid primary key default gen_random_uuid(),
   room_id       uuid not null references public.rooms(id) on delete cascade,
+  user_id       uuid,                                     -- auth.uid() of the person; drives RLS (see security.sql)
   name          text not null,
   is_host       boolean not null default false,
-  joined_at     timestamptz not null default now()
+  joined_at     timestamptz not null default now(),
+  unique (user_id, room_id)
 );
 
 create index if not exists idx_participants_room on public.participants(room_id);
+create index if not exists idx_participants_user on public.participants(user_id);
 
 -- ---------------------------------------------------------------
 -- sessions — one active question session per room (a category run).

@@ -193,7 +193,7 @@ const Store = (() => {
     try {
       const uid = await ensureIdentity();
       if (!uid) { localStorage.removeItem(LS_PREFIX + "me"); return; }
-      const { data: part } = await makeClient().from("participants").select("*").eq("id", uid).maybeSingle();
+      const { data: part } = await makeClient().from("participants").select("*").eq("user_id", uid).order("joined_at", { ascending: false }).limit(1).maybeSingle();
       if (part) {
         const { data: room } = await makeClient().from("rooms").select("*").eq("id", part.room_id).maybeSingle();
         if (room) {
@@ -225,22 +225,21 @@ const Store = (() => {
     }
 
     const sb = makeClient();
-    let code = "";
-    let room = null;
-    let pid = null;
-    try { pid = await ensureIdentity(); }
+    let uid = null;
+    try { uid = await ensureIdentity(); }
     catch (e) { setError(e); return; }
     for (let attempt = 0; attempt < 5 && !room; attempt++) {
       code = randomCode();
       try {
-        const { data, error } = await sb.from("rooms").insert({ code, status: "waiting", creator_name: me, partner_name: partner, creator_id: pid }).select().single();
+        const { data, error } = await sb.from("rooms").insert({ code, status: "waiting", creator_name: me, partner_name: partner, creator_id: uid }).select().single();
         if (!error) room = data;
         else if (error.code !== "23505") throw error; // 23505 = unique violation, just try a new code
       } catch (e) { setError(e); return; }
     }
     if (!room) { setError(new Error("Could not create a room. Try again.")); return; }
 
-    const { error: perr } = await sb.from("participants").insert({ id: pid, room_id: room.id, name: me, is_host: true });
+    const pid = uuid();
+    const { error: perr } = await sb.from("participants").insert({ id: pid, user_id: uid, room_id: room.id, name: me, is_host: true });
     if (perr) { setError(perr); return; }
 
     setState({ me: { id: pid, name: me, isHost: true }, room: { id: room.id, code, status: "waiting" }, partner: { name: partner, joined: false } });
@@ -277,15 +276,16 @@ const Store = (() => {
     }
 
     const sb = makeClient();
-    let pid = null;
-    try { pid = await ensureIdentity(); }
+    let uid = null;
+    try { uid = await ensureIdentity(); }
     catch (e) { setError(e); return; }
     const { data: room, error } = await sb.from("rooms").select("*").eq("code", code).maybeSingle();
     if (error) { setError(error); return; }
     if (!room) { setState({ error: "No room found for that code. Double-check and try again." }); return; }
     if (room.status === "closed" || room.status === "expired") { setState({ error: "That room has closed." }); return; }
 
-    const { error: perr } = await sb.from("participants").insert({ id: pid, room_id: room.id, name: me, is_host: false });
+    const pid = uuid();
+    const { error: perr } = await sb.from("participants").insert({ id: pid, user_id: uid, room_id: room.id, name: me, is_host: false });
     if (perr) { setError(perr); return; }
     await sb.from("rooms").update({ status: "active" }).eq("id", room.id);
 
