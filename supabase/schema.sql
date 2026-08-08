@@ -16,9 +16,11 @@ create extension if not exists "pgcrypto";
 create table if not exists public.rooms (
   id            uuid primary key default gen_random_uuid(),
   code          text not null unique,
-  status        text not null default 'waiting',          -- waiting | active | closed
+  status        text not null default 'waiting',          -- waiting | active | closed | expired
   creator_name  text not null default '',
   partner_name  text not null default '',
+  creator_id    uuid,                                     -- auth.uid() of host (see security.sql)
+  expires_at    timestamptz not null default now() + interval '12 hours',
   created_at    timestamptz not null default now()
 );
 

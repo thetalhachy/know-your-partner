@@ -69,6 +69,26 @@ drop policy if exists sessions_anon_io     on public.sessions;
 drop policy if exists questions_anon_io    on public.questions;
 drop policy if exists answers_anon_io      on public.answers;
 drop policy if exists discoveries_anon_io  on public.discoveries;
+drop policy if exists rooms_select         on public.rooms;
+drop policy if exists rooms_insert         on public.rooms;
+drop policy if exists rooms_update         on public.rooms;
+drop policy if exists rooms_delete         on public.rooms;
+drop policy if exists participants_select  on public.participants;
+drop policy if exists participants_insert  on public.participants;
+drop policy if exists participants_update  on public.participants;
+drop policy if exists participants_delete  on public.participants;
+drop policy if exists sessions_select      on public.sessions;
+drop policy if exists sessions_insert      on public.sessions;
+drop policy if exists sessions_update      on public.sessions;
+drop policy if exists sessions_delete      on public.sessions;
+drop policy if exists answers_select       on public.answers;
+drop policy if exists answers_insert       on public.answers;
+drop policy if exists answers_update       on public.answers;
+drop policy if exists answers_delete       on public.answers;
+drop policy if exists discoveries_select   on public.discoveries;
+drop policy if exists discoveries_insert   on public.discoveries;
+drop policy if exists discoveries_delete   on public.discoveries;
+drop policy if exists questions_select     on public.questions;
 
 alter table public.rooms        enable row level security;
 alter table public.participants enable row level security;
@@ -114,11 +134,13 @@ create policy participants_delete on public.participants for delete
   using (id = auth.uid());
 
 -- sessions -----------------------------------------------------------
+-- Any member may start or advance a session; started_by is filled by the
+-- client and is informational.
 create policy sessions_select on public.sessions for select
   using (is_room_member(room_id));
 
 create policy sessions_insert on public.sessions for insert
-  with check (is_room_member(room_id) and started_by = auth.uid());
+  with check (is_room_member(room_id));
 
 create policy sessions_update on public.sessions for update
   using (is_room_member(room_id));
