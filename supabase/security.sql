@@ -40,13 +40,28 @@ end $$;
 
 -- ------------------------------------------------------------------
 -- 3. CHECK constraints: validate client-supplied data at the DB too
+--    (DO blocks so re-running this file never errors.)
 -- ------------------------------------------------------------------
-alter table public.rooms        add constraint rooms_code_len       check (char_length(code) between 4 and 8);
-alter table public.rooms        add constraint rooms_status_ok       check (status in ('waiting','active','closed','expired'));
-alter table public.participants add constraint participants_name_len check (char_length(name) between 1 and 32);
-alter table public.answers      add constraint answers_text_len      check (char_length(answer) <= 600);
-alter table public.answers      add constraint answers_status_ok     check (answer_status in ('answered','skipped','declined'));
-alter table public.sessions     add constraint sessions_index_ok     check (question_index >= 0);
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'rooms_code_len') then
+    alter table public.rooms add constraint rooms_code_len check (char_length(code) between 4 and 8);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'rooms_status_ok') then
+    alter table public.rooms add constraint rooms_status_ok check (status in ('waiting','active','closed','expired'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'participants_name_len') then
+    alter table public.participants add constraint participants_name_len check (char_length(name) between 1 and 32);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'answers_text_len') then
+    alter table public.answers add constraint answers_text_len check (char_length(answer) <= 600);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'answers_status_ok') then
+    alter table public.answers add constraint answers_status_ok check (answer_status in ('answered','skipped','declined'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'sessions_index_ok') then
+    alter table public.sessions add constraint sessions_index_ok check (question_index >= 0);
+  end if;
+end $$;
 
 -- ------------------------------------------------------------------
 -- 4. Security helper (definer = bypasses RLS only for the lookup)
