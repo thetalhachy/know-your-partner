@@ -95,7 +95,9 @@ $$;
 create or replace function public.open_room_quota()
 returns boolean language sql stable security definer set search_path = public as $$
   select (select count(*) from public.rooms r
-          where r.creator_id = auth.uid() and r.status in ('waiting','active')) < 5;
+          where r.creator_id = auth.uid()
+            and r.status in ('waiting','active')
+            and r.expires_at > now()) < 10;
 $$;
 
 -- ------------------------------------------------------------------
