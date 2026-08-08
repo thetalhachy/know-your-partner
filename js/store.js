@@ -226,6 +226,8 @@ const Store = (() => {
 
     const sb = makeClient();
     let uid = null;
+    let room = null;
+    let code = "";
     try { uid = await ensureIdentity(); }
     catch (e) { setError(e); return; }
     for (let attempt = 0; attempt < 5 && !room; attempt++) {
